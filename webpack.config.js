@@ -11,6 +11,8 @@ module.exports = (_, argv) => {
         output: {
             filename: isDev ? 'bundle.js' : 'color-scheme-provider.js',
             path: path.resolve(__dirname, 'dist'),
+            library: 'ColorSchemeProvider',
+            libraryTarget: 'umd',
             clean: true,
         },
         plugins: isDev && [
