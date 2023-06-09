@@ -1,6 +1,6 @@
 {
   "name": "@sagemodeninja/color-scheme-provider",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "",
   "main": "dist/color-scheme-provider.js",
   "types": "@types/color-scheme-provider.d.ts",
