@@ -1,6 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = (_, argv) => {
     const isDev = argv.mode === 'development';
@@ -21,28 +21,32 @@ module.exports = (_, argv) => {
         ],
         module: {
             rules: [
-                isDev ? {
-                    test: /\.css$/i,
-                    use: [MiniCssExtractPlugin.loader, 'css-loader'],
-                } : {},
+                isDev
+                    ? {
+                          test: /\.css$/i,
+                          use: [MiniCssExtractPlugin.loader, 'css-loader'],
+                      }
+                    : {},
                 {
                     test: /\.ts$/,
                     use: 'ts-loader',
-                    exclude: /node_modules/
+                    exclude: /node_modules/,
                 },
-            ]
+            ],
         },
         resolve: {
-            extensions: ['.ts', '.js']
+            extensions: ['.ts', '.js'],
         },
-        devServer: isDev ? {
-            static: {
-                directory: path.join(__dirname, 'dist'),
-            },
-            compress: true,
-            https: false,
-            port: 3000,
-        } : {},
+        devServer: isDev
+            ? {
+                  static: {
+                      directory: path.join(__dirname, 'dist'),
+                  },
+                  compress: true,
+                  https: false,
+                  port: 3000,
+              }
+            : {},
         devtool: isDev ? 'inline-source-map' : 'source-map',
-    }
-}
+    };
+};
