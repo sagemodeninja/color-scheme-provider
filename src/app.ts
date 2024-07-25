@@ -1,19 +1,19 @@
 import '/public/css/app.css'
-import colorSchemeProvider from './color-scheme-provider';
+import { ColorSchemeProvider, ColorSchemeValues } from './color-scheme-provider'
 
-colorSchemeProvider.subscribeNotification(() => {
-    console.log(`Color scheme changed to ${colorSchemeProvider.colorScheme}.`);
-    document.body.dataset.colorScheme = colorSchemeProvider.colorScheme;
-});
+const colorSchemeProvider = new ColorSchemeProvider()
+
+colorSchemeProvider.subscribe(scheme => {
+    console.log(`Color scheme changed to ${scheme}.`)
+    document.body.dataset.colorScheme = scheme
+})
 
 document.addEventListener('DOMContentLoaded', () => {
-    const selectScheme = document.getElementById(
-        'select_color_scheme'
-    ) as HTMLSelectElement;
-    const button = document.getElementById('set_scheme');
+    const selectScheme = document.getElementById('select_color_scheme') as HTMLSelectElement
+    const button = document.getElementById('set_scheme')
 
-    button.addEventListener('click', () => {
+    button.addEventListener('click', async () => {
         const scheme = selectScheme.value;
-        colorSchemeProvider.preferredColorScheme = scheme;
-    });
-});
+        colorSchemeProvider.update(scheme as ColorSchemeValues)
+    })
+})

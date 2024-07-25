@@ -1,72 +1,90 @@
-type Callback = () => void;
+import { ColorSchemeStore } from './storage'
 
-class ColorSchemeProvider {
-    private _callbacks: Set<Callback>;
+const BROADCAST_CHANNEL = 'color-scheme-provider'
+
+export type ColorSchemeValues = 'auto' | 'dark' | 'light'
+export type Callback = (scheme: ColorSchemeValues) => void;
+
+export class ColorSchemeProvider {
+    private readonly _store: ColorSchemeStore
+    private readonly _subscribers: Callback[]
+    private readonly _broadcastChannel: BroadcastChannel
+
+    private _rawScheme: ColorSchemeValues
+    private _normalScheme: ColorSchemeValues
 
     constructor() {
-        this._callbacks = new Set();
-        this.addEventListeners();
+        this._store = new ColorSchemeStore()
+        this._subscribers = []
+        this._broadcastChannel = new BroadcastChannel(BROADCAST_CHANNEL)
+
+        this.addEventListeners()
     }
 
-    get preferredColorScheme(): string {
-        return window.localStorage.getItem('prefers-color-scheme');
+    public async subscribe(callback: Callback) {
+        this._subscribers.push(callback)
+        await this.resolveColorScheme()
+        callback(this._normalScheme)
     }
 
-    set preferredColorScheme(value: string) {
-        const options = ['auto', 'light', 'dark'];
+    public async update(scheme: ColorSchemeValues) {
+        if (this._rawScheme === scheme) return
 
-        if (!options.includes(value))
-            throw new Error(
-                `Value "${value}" is not a valid preffered color scheme.`
-            );
+        await this._store.put(scheme)
+        this._rawScheme = scheme
 
-        if (this.preferredColorScheme === value) return;
+        this._broadcastChannel.postMessage(scheme)
+        this.setInternalScheme(scheme)
 
-        window.localStorage.setItem('prefers-color-scheme', value);
-        window.postMessage('colorSchemeChanged', window.location.origin);
+        this.notifySubscribers()
     }
 
-    get colorScheme(): string {
-        const colorScheme = this.preferredColorScheme;
-
-        if (!colorScheme || colorScheme === 'auto') {
-            const media = '(prefers-color-scheme: dark)';
-            const isDark =
-                window.matchMedia && window.matchMedia(media).matches;
-
-            return !isDark ? 'light' : 'dark';
-        }
-
-        return colorScheme;
-    }
-
-    public subscribeNotification(callback: Callback) {
-        this._callbacks.add(callback);
-    }
-
-    public toggle() {
-        this.preferredColorScheme =
-            this.colorScheme === 'dark' ? 'light' : 'dark';
+    public async toggle() {
+        await this.resolveColorScheme()
+        const scheme = this._normalScheme
+        this.update(scheme === 'dark' ? 'light' : 'dark')
     }
 
     private addEventListeners() {
-        window.addEventListener('message', (event: MessageEvent) => {
-            if (event.data === 'colorSchemeChanged')
-                this.notify();
-        });
-
-        window.addEventListener('storage', (event: StorageEvent) => {
-            if (event.key === 'prefers-color-scheme') {
-                this.notify();
-            }
-        });
+        this._broadcastChannel.addEventListener('message', (event: MessageEvent) => {
+            this.setInternalScheme(event.data as ColorSchemeValues)
+            this.notifySubscribers()
+        })
     }
 
-    private notify() {
-        this._callbacks.forEach(callback => callback());
+    /**
+     * Retrieves color scheme from store if not yet done so.
+     * Otherwise, internal states are kept fresh during this instance's lifetime via other efficient means.
+     */
+    private async resolveColorScheme() {
+        if (!this._rawScheme) {
+            const scheme = await this._store.get()
+            this.setInternalScheme(scheme as ColorSchemeValues)
+        }
+    }
+
+    private setInternalScheme(scheme: ColorSchemeValues) {
+        this._rawScheme = scheme
+        this._normalScheme = this.getNormalScheme()
+    }
+
+    private getNormalScheme() {
+        const scheme = this._rawScheme
+
+        if (!scheme || scheme === 'auto') {
+            const media = '(prefers-color-scheme: dark)'
+            const isDark = window.matchMedia && window.matchMedia(media).matches
+            return !isDark ? 'light' : 'dark'
+        }
+
+        return scheme as ColorSchemeValues
+    }
+
+    private notifySubscribers() {
+        const scheme = this._normalScheme
+        this._subscribers.forEach(callback => callback(scheme))
     }
 }
 
 const colorSchemeProvider = new ColorSchemeProvider();
-
 export default colorSchemeProvider;

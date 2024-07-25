@@ -9,6 +9,19 @@ Or, see the [demo site](https://dev.garyantier.com/color-scheme-provider) for ex
 
 <!-- TODO: Add wiki/documentation. -->
 
+## v2.* Breaking Changes
+
+### ColorSchemeProvider Members
++ Deprecated `preferredColorScheme` and `colorScheme` properties.
+    - Subscribers are notified and given a `scheme` parameter with a value equivalent to the `colorScheme` property.
+    - Use asynchronous `update` function to update schemes, this is equivalent to setting a value to `preferredColorScheme`.
++ Renamed `subscribeNotification` to `subscribe`.
++ Callback for `subscribe` now has a `scheme` parameter.
+
+### Behavior
++ Subscribing will now trigger an initial callback with the latest scheme value as a parameter.
++ The `subscribe`, `toggle` and the new `update` functions is now asynchronous.
+
 ## Installation
 
 From within your project, run:

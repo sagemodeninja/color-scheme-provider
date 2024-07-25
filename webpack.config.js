@@ -2,8 +2,8 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-module.exports = (_, argv) => {
-    const isDev = argv.mode === 'development';
+module.exports = (_, { mode }) => {
+    const isDev = mode === 'development';
 
     return {
         target: 'web',
@@ -23,9 +23,9 @@ module.exports = (_, argv) => {
             rules: [
                 isDev
                     ? {
-                          test: /\.css$/i,
-                          use: [MiniCssExtractPlugin.loader, 'css-loader'],
-                      }
+                        test: /\.css$/i,
+                        use: [MiniCssExtractPlugin.loader, 'css-loader'],
+                    }
                     : {},
                 {
                     test: /\.ts$/,
@@ -39,13 +39,13 @@ module.exports = (_, argv) => {
         },
         devServer: isDev
             ? {
-                  static: {
-                      directory: path.join(__dirname, 'dist'),
-                  },
-                  compress: true,
-                  https: false,
-                  port: 3000,
-              }
+                static: {
+                    directory: path.join(__dirname, 'dist'),
+                },
+                compress: true,
+                https: false,
+                port: 3000,
+            }
             : {},
         devtool: isDev ? 'inline-source-map' : 'source-map',
     };
